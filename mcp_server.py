@@ -12,6 +12,7 @@ import logging
 import os
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -306,7 +307,40 @@ def ping() -> str:
 # Entry point
 # =============================================================================
 
+def _wait_for_backend(timeout: int = 600) -> bool:
+    """Poll the Gradio backend until it responds or times out.
+
+    Returns True if ready, False if timeout.
+    """
+    from urllib.request import urlopen, Request
+    deadline = time.time() + timeout
+    attempt = 0
+    while time.time() < deadline:
+        attempt += 1
+        try:
+            req = Request(f"{voxcpm_url}/gradio_api/info")
+            with urlopen(req, timeout=5) as r:
+                if r.status == 200:
+                    logger.info(f"Backend ready after {attempt} attempt(s)")
+                    return True
+        except Exception:
+            pass
+        remaining = int(deadline - time.time())
+        logger.info(
+            f"Waiting for VoxCPM backend at {voxcpm_url} "
+            f"(attempt {attempt}, {remaining}s remaining)..."
+        )
+        time.sleep(5)
+    logger.error(f"Backend did not become ready within {timeout}s")
+    return False
+
+
 if __name__ == "__main__":
     logger.info(f"VoxCPM MCP Server starting, backend: {voxcpm_url}")
     logger.info(f"Voice presets dir: {VOICES_DIR} ({'exists' if VOICES_DIR.is_dir() else 'MISSING'})")
+
+    if not _wait_for_backend():
+        logger.error("Backend not ready, exiting. Claude Code will retry.")
+        sys.exit(1)
+
     mcp.run()
