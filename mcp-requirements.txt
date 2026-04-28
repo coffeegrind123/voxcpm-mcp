@@ -1,0 +1,2 @@
+gradio-client>=1.0,<2
+mcp>=1.2.0,<2
