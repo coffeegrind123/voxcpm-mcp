@@ -43,20 +43,24 @@ cd voxcpm-mcp
 pip install -r requirements.txt
 ```
 
-Register the MCP server with your client. For Claude Code in `~/.claude/settings.json`:
+Register the MCP server with Claude Code:
+
+```bash
+claude mcp add voxcpm -s user -- /bin/bash /path/to/voxcpm-mcp/run-mcp.sh
+```
+
+Or edit `~/.claude/.claude.json` directly:
 
 ```json
 {
   "mcpServers": {
     "voxcpm": {
       "command": "/bin/bash",
-      "args": ["/absolute/path/to/voxcpm-mcp/run-mcp.sh"]
+      "args": ["/path/to/voxcpm-mcp/run-mcp.sh"]
     }
   }
 }
 ```
-
-Or use the `/mcp` dialog in Claude Code to register it interactively.
 
 The bridge connects to `http://host.docker.internal:8808` by default. Override with `VOXCPM_URL` if the Gradio app runs on a different host or port:
 
